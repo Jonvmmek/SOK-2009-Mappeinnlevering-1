@@ -1,0 +1,162 @@
+---
+title: "SOK-2009 Mappeinnlevering 1"
+author: "28"
+format: pdf
+editor: visual
+---
+
+```{r, warning=FALSE}
+rm(list=ls())
+library(tidyverse)
+```
+
+## Oppgave 3
+
+### 1.
+
+Definer T som antall prikker p˚a en seksidet terning og 2T som antall prikker p˚a to sekssidede terninger.
+
+1\. Et av utfallsrommene T og 2T har uniform sannsynlighet det andre har ikke uniform sannsynlighetsfordeling.
+
+Forklar hva det betyr og hvorfor det er slik. Tegn opp grafen for f (T ), f (2T ) og den kumulative sannsynlighets-fordelingen F (2T ), F (T )?
+
+```{r}
+T <- 6
+
+T1 <- expand.grid(1:T)
+T2 <- expand.grid(1:T, 1:T)
+
+names(T2)[1] = "T"
+names(T2)[2] = "T2"
+```
+
+```{r}
+
+T2$T2 <- rowSums(T2)
+
+
+sums1 <- rowSums(T1)
+sums2 <- rowSums(T2)
+
+
+prob1 <- table(sums1) / length(sums1)
+prob2 <- table(T2$T2) / 36
+
+prob.dist1 <- data.frame(sums1 = as.integer(names(prob1)),
+                        prob1 = as.numeric(prob1))
+
+
+prob.dist2 <- data.frame(sums2 = as.integer(names(prob2)),
+                        prob2 = as.numeric(prob2))
+
+ggplot(prob.dist1, aes(x = sums1, y = prob1)) +
+  geom_col() +
+  scale_x_continuous(breaks = seq(1, 6, by = 1), 
+                     labels = seq(1, 6, by = 1))
+
+```
+
+Uniform sansynlighet kommer av at det er like stor sannsynlighet for å få alle tallene da utfallet ikke er avhengi av en annen terning.
+
+```{r}
+ggplot(prob.dist2, aes(x = sums2, y = prob2)) +
+  geom_col() +
+  scale_x_continuous(breaks = seq(2, 12, by = 1), 
+                     labels = seq(2, 12, by = 1))
+```
+
+Ikke unform sannsynlighet visualiseres godt her da vi ser at det er mer sannsynlig at to terninger ender opp med enkelte tall en andre, dette fordi noen tall har flere kombinasjoner på to terninger en andre.
+
+### 2. 
+
+Kan du regne ut korrelasjon, kovarians, varians og standardavik for T og 2T ?
+
+```{r}
+#Varians
+T2$var <- apply(T2[, c("T","T2")],1,var)
+
+
+#Standardavvik
+T2$Sd <- apply(T2[, c("T","T2")],1,sd)
+
+
+#Korvans
+T2$cov <- cov(T2$T, T2$T2)
+
+#Korelasjon
+T2$kor <- T2$cov / (T2$T * T2$T2)
+
+T2
+```
+
+### 3. 
+
+Kan du lage en grafisk fremmstilling fra to utfallsrom til T til ett utfallsrom med 2T .
+
+```{r}
+probT <- prob.dist1[c(2,6),]
+probT2 <- prob.dist2[c(1,5),]
+
+ggplot() + 
+  geom_col(data=probT, aes(x=sums1, y=prob1), fill='blue') + 
+  geom_col(data=probT2, aes(x=sums2, y=prob2), fill='red')
+```
+
+### 4. 
+
+For to terningkast, T2 hva er sannsynligheten for ˚a observere at to terninger er like, t1 = t2 definer dette somP (A)?
+
+Hva er sannsynligheten for ˚a observere at summen er mellom 7 og 10 definer dette som P (B)?
+
+Hva ersannsynligheten for ˚a observere at summen er 2, 7 eller 8 definer dette som P (C).
+
+```{r}
+#Av 36 totale utfall er det kun 6 utfall som gir like tall.
+
+#1+1, 2+2, 3+3, 4+4, 5+5, 6+6.
+
+
+'P(A)' <- sum(6/36)*100 # eller 1/6,
+
+#Av 36 instanser ser vi at der finnes 6(7), 5(8), 4(9) og 3(10)
+
+#dette kan vi bevise ved å printe ut instansene av disse 
+#tallene i de sammenlagte summene.
+
+print(filter(T2, T2 == '7')) # 6
+print(filter(T2, T2 == '8')) # 5
+print(filter(T2, T2 == '9')) # 4
+print(filter(T2, T2 == '10')) # 3
+
+'P(B)' <- sum((6+5+4+3)/36)*100 # 50 % eller 1/2
+
+#2(1), 7(6), 8(5)
+
+print(filter(T2, T2 == '2')) # 1
+print(filter(T2, T2 == '7')) # 6
+print(filter(T2, T2 == '8')) # 5
+
+'P(C)' <- sum((2+7+8)/36)*100 # 47 % eller 17/36
+```
+
+Hva er sannsynligheten for at alle tre A B og C skal skje i.e P (A ∩ B ∩ C)?
+
+Hva er sannsynligheten for P (A ∩ B)? Kan du forklare hvorfor du f˚ar svarene?
+
+#For at betingelsene til (A ∩ B ∩ C) skal kunne oppfylles må vi se hvilke tall innenfor disse rammene kan være med på å oppfylle krvene. Vi vet fra P(A) at det må være 2 like tall, vi vet fra P(B) at summen må være mellom 7 og 10, og i P(C) utelokkes 2 alternativer som gjør at vi kun sitter igjen med en mulighet, nemlig 8.
+
+#Da har vi muligheten 4+4=8.Som regnet ut i et tidligere datasett er 13.88% sjanse for å få.
+
+#For at betingelsene til (A ∩ B ∩ C) skal kunne oppfylles må vi se hvilke tall innenfor disse rammene kan være med på å oppfylle krvene. Vi vet fra P(A) at det må være 2 like tall, vi vet fra P(B) at summen må være mellom 7 og 10, og i P(C) utelokkes 2 alternativer som gjør at vi kun sitter igjen med en mulighet, nemlig 8.
+
+#Da har vi muligheten 4+4=8.Som regnet ut i et tidligere datasett er 13.88% sjanse for å få.
+
+```{r}
+'(A ∩ B ∩ C)' <- sum((0.13888889*100)) # = 13.888889
+```
+
+#Ved betingelsene til (A ∩ B) trenger vi ikke å utelokke like mange tall, her sitter vi igjen med to muligheter. Vi kan få enten 4+4=8 eller 5+5=10. om vi legger sammen prosenten til begge mulighetene ser vi sansynligheten for A ∩ B.
+
+```{r}
+'(A ∩ B)' <-  sum((0.13888889*100)+(0.08333333*100)) # = 22.22222
+```
